@@ -3,7 +3,7 @@ import { promises as fsp } from 'fs';
 
 import { Client, ClientChannel } from 'ssh2';
 
-import { upload, write } from './ssh.js';
+import { write } from './scp.js';
 import { resource } from '../lib/pathutil.js';
 
 const CANIDATES = [
@@ -11,7 +11,7 @@ const CANIDATES = [
   '/Developer/usr/bin/debugserver',  // pre iOS 16
 ]
 
-const DEBUGSERVER = '/tmp/debugserver';
+const DEBUGSERVER = '/var/root/debugserver';
 
 
 function debugserver(client: Client, cmd: string): Promise<ClientChannel> {
@@ -41,14 +41,18 @@ function debugserver(client: Client, cmd: string): Promise<ClientChannel> {
   })
 }
 
+function quote(filename: string) {
+  return `'${filename.replace(/(['\\])/g,'\\$1')}'`
+}
+
 // shell injection, but unvoidable
 export async function spawn(client: Client, server: string, path: string, port: number): Promise<ClientChannel> {
-  const cmd = `${server} -x backboard 127.1:${port} ${path}`;
+  const cmd = `${server} -x backboard 127.1:${port} ${quote(path)}`;
   return debugserver(client, cmd);
 }
 
 export function attach(client: Client, server: string, target: number | string, port: number) {
-  const cmd = `${server} 127.1:${port} -a ${target}`;
+  const cmd = `${server} 127.1:${port} -a ${quote(target.toString())}`;
   return debugserver(client, cmd);
 }
 
@@ -72,21 +76,13 @@ export async function deploy(client: Client) {
     await write(client, content, remoteXML);
   }
 
-  let dest = DEBUGSERVER;
-
-  const probe = '/test.txt'
-  const hasRootFS = await cmd(`echo "test" > ${probe} && rm ${probe}`);
-  if (hasRootFS) {
-    dest = '/usr/bin/debugserver';
-  }
-
   for (const candiate of CANIDATES) {
     if (await cmd(`test -f ${candiate}`)) {
-      await cmd(`cp ${candiate} ${dest}`);
-      await cmd(`ldid -S${remoteXML} ${dest}`);
+      await cmd(`cp ${candiate} ${DEBUGSERVER}`);
+      await cmd(`ldid -S${remoteXML} ${DEBUGSERVER}`);
 
-      console.log(`signed ${candiate} debugserver to ${dest}`);
-      return dest;
+      console.log(`signed ${candiate} debugserver to ${DEBUGSERVER}`);
+      return DEBUGSERVER;
     }
   }
 
