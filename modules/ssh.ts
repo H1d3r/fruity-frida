@@ -33,7 +33,7 @@ export async function scan(device: frida.Device) {
   throw Error('Port not found. Target device must be jailbroken and with sshd running.');
 }
 
-export async function connect(device: frida.Device) {
+export async function connect(device: frida.Device, preferedUser='mobile', preferedPassword='alpine') {
   const port = await scan(device);
   const channel = await device.openChannel(`tcp:${port}`);
 
@@ -44,8 +44,8 @@ export async function connect(device: frida.Device) {
     if ('SSH_PASSPHRASE' in process.env)
       config.passphrase = process.env['SSH_PASSPHRASE'];
   } else {
-    config.username = process.env['SSH_USERNAME'] || 'mobile';
-    config.password = process.env['SSH_PASSWORD'] || 'alpine';
+    config.username = process.env['SSH_USERNAME'] || preferedUser;
+    config.password = process.env['SSH_PASSWORD'] || preferedPassword;
   }
 
   const client = new Client();

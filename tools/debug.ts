@@ -18,7 +18,7 @@ enum DebugMode {
 }
 
 async function debug(device: Device, mode: DebugMode, target: string) {
-  const client = await connect(device);
+  const client = await connect(device, 'root', 'alpine');
   const emptyHandler = () => { };
 
   const params = await device.querySystemParameters();
