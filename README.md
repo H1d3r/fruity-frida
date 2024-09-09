@@ -2,23 +2,7 @@
 
 Utils for deploying frida to rootless iOS and more
 
-## Installation
-
-So many people reported that they failed to get prebuilt frida node package. If it's the first time you use nodejs, I recommend you to use LTS (Long-term support).
-
-For example, on macOS with homebrew and nvm:
-
-```bash
-brew install nvm
-nvm install --lts
-nvm use --lts
-```
-
-Then install the package:
-
-```bash
-npm install -g fruity-frida
-```
+I took down the package from npm because it's not very much useful now as Sep 2024
 
 ## Commands
 
